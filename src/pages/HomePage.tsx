@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Store, User } from "lucide-react";
 import Layout from '@/components/layout/Layout';
+import FeaturedDeals from '@/components/home/FeaturedDeals';
 
 const MARKETPLACES_LOGOS = [
   "https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadolibre/logo__large_plus.png",
@@ -63,6 +64,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+      
+      {/* Featured Deals Section */}
+      <FeaturedDeals />
       
       {/* How it works section */}
       <section className="py-16 px-4 bg-white">
