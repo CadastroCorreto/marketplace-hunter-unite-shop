@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -29,9 +28,9 @@ interface AuthResponse {
   refresh_token: string;
 }
 
-// Credenciais do Mercado Livre - Atualizadas
-const CLIENT_ID = '7341590911785412';
-const CLIENT_SECRET = 'epTgggVJAYLufgCQzvt88BTRNgzHnXpD';
+// Credenciais atualizadas do Mercado Livre
+const CLIENT_ID = '652659079305130';
+const CLIENT_SECRET = 'bzHDdHFAjlKYPA7s3G73pHmr2U9iSJiP';
 const REDIRECT_URI = 'https://marketplace-hunter-unite-shop.lovable.app/callback/mercadolivre';
 
 // Verifica se temos um token armazenado localmente
