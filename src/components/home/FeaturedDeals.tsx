@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import ProductCard from '../search/ProductCard';
 import { useMercadoLivre } from '@/hooks/useMercadoLivre';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const MOCK_OTHER_DEALS = [
   {
@@ -53,7 +54,23 @@ const MOCK_OTHER_DEALS = [
 ];
 
 const FeaturedDeals = () => {
-  const { data: mlProducts, isLoading, error } = useMercadoLivre();
+  const { data: mlProducts, isLoading, error, refetch } = useMercadoLivre();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Exibir informações de debug no console
+    console.log('Estado do carregamento:', isLoading);
+    console.log('Dados recebidos:', mlProducts);
+    console.log('Erro (se houver):', error);
+    
+    if (error) {
+      toast({
+        title: "Erro ao carregar produtos",
+        description: `Detalhes: ${error.message || "Erro desconhecido"}`,
+        variant: "destructive"
+      });
+    }
+  }, [mlProducts, isLoading, error, toast]);
   
   const formatMercadoLivreProduct = (mlProduct: any) => ({
     id: mlProduct.id,
@@ -68,7 +85,7 @@ const FeaturedDeals = () => {
     discount: mlProduct.original_price 
       ? Math.round(((mlProduct.original_price - mlProduct.price) / mlProduct.original_price) * 100)
       : 0,
-    freeShipping: mlProduct.shipping.free_shipping,
+    freeShipping: mlProduct.shipping?.free_shipping || false,
     rating: 4.8
   });
 
@@ -85,6 +102,14 @@ const FeaturedDeals = () => {
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Confira as melhores ofertas selecionadas dos principais marketplaces.
           </p>
+          {!isLoading && (
+            <button 
+              onClick={() => refetch()} 
+              className="mt-4 px-4 py-2 bg-marketplace-blue text-white rounded-md hover:bg-blue-600"
+            >
+              Atualizar Ofertas
+            </button>
+          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -106,16 +131,32 @@ const FeaturedDeals = () => {
                 <AlertTitle>Atenção</AlertTitle>
                 <AlertDescription>
                   Não foi possível carregar os produtos do Mercado Livre. Mostrando ofertas alternativas.
+                  <p className="mt-2 text-sm font-mono bg-gray-100 p-2 rounded">
+                    Erro: {error.message}
+                  </p>
                 </AlertDescription>
               </Alert>
-              {deals.map((deal) => (
+              {MOCK_OTHER_DEALS.map((deal) => (
                 <ProductCard key={deal.id} {...deal} />
               ))}
             </>
-          ) : (
+          ) : mlProducts?.length ? (
             deals.map((deal) => (
               <ProductCard key={deal.id} {...deal} />
             ))
+          ) : (
+            <>
+              <Alert className="col-span-full mb-6">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Informação</AlertTitle>
+                <AlertDescription>
+                  Nenhum produto encontrado na API do Mercado Livre. Verifique se sua conta está conectada corretamente.
+                </AlertDescription>
+              </Alert>
+              {MOCK_OTHER_DEALS.map((deal) => (
+                <ProductCard key={deal.id} {...deal} />
+              ))}
+            </>
           )}
         </div>
       </div>
