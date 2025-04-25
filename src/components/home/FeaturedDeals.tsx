@@ -74,7 +74,7 @@ const FeaturedDeals = () => {
 
   // Use os produtos do Mercado Livre se estiverem disponíveis, senão use os dados simulados
   const deals = mlProducts?.length 
-    ? [formatMercadoLivreProduct(mlProducts[0]), ...MOCK_OTHER_DEALS.slice(1)]
+    ? mlProducts.slice(0, 3).map(formatMercadoLivreProduct)
     : MOCK_OTHER_DEALS;
 
   return (
