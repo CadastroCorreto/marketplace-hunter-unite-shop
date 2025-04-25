@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -28,9 +29,10 @@ interface AuthResponse {
   refresh_token: string;
 }
 
-// Credenciais atualizadas do Mercado Livre
-const CLIENT_ID = '652659079305130';
-const CLIENT_SECRET = 'bzHDdHFAjlKYPA7s3G73pHmr2U9iSJiP';
+// Certifique-se de que estas credenciais correspondam EXATAMENTE ao que está configurado no Mercado Livre
+// Não altere estes valores a menos que você tenha novas credenciais oficiais do Mercado Livre
+const CLIENT_ID = '2467394478096378';
+const CLIENT_SECRET = 'BOl8KiYyWvnB8JpG37macsUp4XNHbnLe';
 const REDIRECT_URI = 'https://marketplace-hunter-unite-shop.lovable.app/callback/mercadolivre';
 
 // Verifica se temos um token armazenado localmente
@@ -42,8 +44,10 @@ const getStoredToken = (): { access_token: string; expires_at: number; refresh_t
     const parsed = JSON.parse(tokenData);
     // Verifica se o token expirou
     if (parsed.expires_at && parsed.expires_at < Date.now()) {
+      console.log('Token expirado, precisa renovar');
       return null;
     }
+    console.log('Token válido encontrado no localStorage');
     return parsed;
   } catch (error) {
     console.error('Erro ao recuperar token armazenado:', error);
@@ -60,6 +64,7 @@ const storeToken = (data: AuthResponse) => {
     user_id: data.user_id
   };
   
+  console.log('Armazenando novo token, válido até:', new Date(tokenData.expires_at).toLocaleString());
   localStorage.setItem('ml_token_data', JSON.stringify(tokenData));
   return tokenData;
 };
@@ -72,7 +77,9 @@ export const getAuthorizationUrl = () => {
     redirect_uri: REDIRECT_URI
   });
   
-  return `https://auth.mercadolibre.com.ar/authorization?${params.toString()}`;
+  const authUrl = `https://auth.mercadolivre.com.br/authorization?${params.toString()}`;
+  console.log('URL de autorização gerada:', authUrl);
+  return authUrl;
 };
 
 // Troca o código de autorização por um token de acesso
@@ -80,7 +87,7 @@ const exchangeCodeForToken = async (code: string): Promise<AuthResponse> => {
   console.log('Trocando código por token...');
   
   try {
-    const response = await fetch('https://api.mercadolibre.com/oauth/token', {
+    const response = await fetch('https://api.mercadolivre.com/oauth/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -118,7 +125,7 @@ const refreshAccessToken = async (refreshToken: string): Promise<AuthResponse> =
   console.log('Atualizando token com refresh token...');
   
   try {
-    const response = await fetch('https://api.mercadolibre.com/oauth/token', {
+    const response = await fetch('https://api.mercadolivre.com/oauth/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -155,7 +162,7 @@ const getClientCredentialsToken = async (): Promise<string> => {
   console.log('Obtendo token via client credentials...');
   
   try {
-    const response = await fetch('https://api.mercadolibre.com/oauth/token', {
+    const response = await fetch('https://api.mercadolivre.com/oauth/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -245,6 +252,7 @@ export const useProcessMercadoLivreAuth = () => {
       setIsProcessing(true);
       
       try {
+        console.log('Processando código de autorização:', code);
         await exchangeCodeForToken(code);
         
         // Opcional: Armazenar conexão no Supabase se o usuário estiver logado
@@ -286,8 +294,9 @@ const fetchFeaturedProducts = async () => {
     const accessToken = await getAccessToken();
     
     console.log('Token obtido, buscando produtos...');
+    // Usando a API de tendências para obter produtos em destaque
     const response = await fetch(
-      'https://api.mercadolibre.com/sites/MLB/search?category=MLB1051&sort=relevance&limit=3',
+      'https://api.mercadolibre.com/trends/MLB',
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -301,9 +310,42 @@ const fetchFeaturedProducts = async () => {
       throw new Error(`Falha ao buscar produtos: ${response.status} - ${errorText}`);
     }
     
-    const data: MercadoLivreResponse = await response.json();
-    console.log('Produtos obtidos com sucesso:', data.results.length);
-    return data.results;
+    const trends = await response.json();
+    
+    if (!trends || !trends.length) {
+      console.log('Nenhuma tendência encontrada, retornando array vazio');
+      return [];
+    }
+    
+    // Pegar os primeiros 3 produtos das tendências
+    const firstThreeTrends = trends.slice(0, 3);
+    
+    // Para cada tendência, buscar detalhes do produto
+    const productDetailsPromises = firstThreeTrends.map(async (trend: any) => {
+      const keyword = trend.keyword;
+      const searchResponse = await fetch(
+        `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(keyword)}&limit=1`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          }
+        }
+      );
+      
+      if (!searchResponse.ok) {
+        console.error(`Erro ao buscar detalhes para ${keyword}`);
+        return null;
+      }
+      
+      const searchData = await searchResponse.json();
+      return searchData.results[0];
+    });
+    
+    const productsDetails = await Promise.all(productDetailsPromises);
+    const validProducts = productsDetails.filter(product => product !== null);
+    
+    console.log('Produtos obtidos com sucesso:', validProducts.length);
+    return validProducts;
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
     throw error;
