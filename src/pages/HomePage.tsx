@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Store, User } from "lucide-react";
+import { Search, Store, User, LogIn } from "lucide-react";
 import Layout from '@/components/layout/Layout';
+import { supabase } from '@/integrations/supabase/client';
 
 const MARKETPLACES_LOGOS = [
   "https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadolibre/logo__large_plus.png",
@@ -37,6 +37,11 @@ const HomePage = () => {
               <Link to="/marketplaces">
                 <Button size="lg" variant="outline">
                   Conectar Marketplaces
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button size="lg" variant="secondary">
+                  <LogIn className="mr-2 h-4 w-4" /> Entrar
                 </Button>
               </Link>
             </div>
