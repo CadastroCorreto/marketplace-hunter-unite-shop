@@ -26,8 +26,12 @@ interface AuthResponse {
   refresh_token: string;
 }
 
-const CLIENT_ID = '8929831647860533';
-const CLIENT_SECRET = 'YlqxRH5mfavRBWJLZhFv5ppZxDJFgEgD';
+// APP tradicional (Server-side)
+// Suas credenciais do Mercado Livre - atualizadas para as novas credenciais
+// IMPORTANTE: Para aplicações front-end, considere usar o método de autorização apropriado
+// ou mover esta lógica para um backend
+const CLIENT_ID = '5508932736729572';
+const CLIENT_SECRET = 'EiDuaVchmQNUoYsJoQQgjsZpWQYUNvQE';
 
 const getAccessToken = async (): Promise<string> => {
   console.log('Tentando obter token de acesso do Mercado Livre...');
@@ -49,11 +53,11 @@ const getAccessToken = async (): Promise<string> => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Falha na autenticação:', response.status, errorText);
-      throw new Error(`Falha ao obter token de acesso: ${response.status} ${response.statusText}`);
+      throw new Error(`Falha ao obter token de acesso: ${response.status} - ${errorText}`);
     }
 
     const data: AuthResponse = await response.json();
-    console.log('Token de acesso obtido com sucesso');
+    console.log('Token de acesso obtido com sucesso:', data.access_token.substring(0, 10) + '...');
     return data.access_token;
   } catch (error) {
     console.error('Erro ao obter token:', error);
@@ -79,7 +83,7 @@ const fetchFeaturedProducts = async () => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Erro na resposta da API:', response.status, errorText);
-      throw new Error(`Falha ao buscar produtos: ${response.status} ${response.statusText}`);
+      throw new Error(`Falha ao buscar produtos: ${response.status} - ${errorText}`);
     }
     
     const data: MercadoLivreResponse = await response.json();
