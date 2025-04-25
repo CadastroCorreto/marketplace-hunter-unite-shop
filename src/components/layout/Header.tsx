@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Search, User, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import AuthModal from '../auth/AuthModal';
 
 const Header = () => {
@@ -40,16 +40,6 @@ const Header = () => {
           >
             <LogIn className="mr-2 h-4 w-4" /> Entrar
           </Button>
-          <Link to="/account">
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
-          </Link>
-          <Link to="/search">
-            <Button className="bg-marketplace-blue hover:bg-blue-600 text-white">
-              Nova Busca
-            </Button>
-          </Link>
         </div>
       </div>
       <AuthModal 
