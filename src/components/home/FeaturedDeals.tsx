@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import ProductCard from '../search/ProductCard';
+import { useMercadoLivre } from '@/hooks/useMercadoLivre';
 
-const MOCK_FEATURED_DEALS = [
+const MOCK_OTHER_DEALS = [
   {
     id: "1",
     title: "Samsung Galaxy S23 Ultra 256GB",
@@ -49,6 +49,30 @@ const MOCK_FEATURED_DEALS = [
 ];
 
 const FeaturedDeals = () => {
+  const { data: mlProducts, isLoading, error } = useMercadoLivre();
+  
+  const formatMercadoLivreProduct = (mlProduct: any) => ({
+    id: mlProduct.id,
+    title: mlProduct.title,
+    price: mlProduct.price,
+    image: mlProduct.thumbnail.replace('I.jpg', 'W.jpg'),
+    marketplace: {
+      id: "mercado-livre",
+      name: "Mercado Livre",
+      logo: "https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadolibre/logo__large_plus.png"
+    },
+    discount: mlProduct.original_price 
+      ? Math.round(((mlProduct.original_price - mlProduct.price) / mlProduct.original_price) * 100)
+      : 0,
+    freeShipping: mlProduct.shipping.free_shipping,
+    rating: 4.8
+  });
+
+  const deals = [
+    ...(mlProducts ? [formatMercadoLivreProduct(mlProducts[0])] : []),
+    ...MOCK_OTHER_DEALS.slice(1)
+  ];
+
   return (
     <section className="py-16 px-4 bg-white">
       <div className="container mx-auto max-w-6xl">
@@ -60,9 +84,19 @@ const FeaturedDeals = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {MOCK_FEATURED_DEALS.map((deal) => (
-            <ProductCard key={deal.id} {...deal} />
-          ))}
+          {isLoading ? (
+            <div className="col-span-full text-center py-8">
+              Carregando ofertas...
+            </div>
+          ) : error ? (
+            <div className="col-span-full text-center py-8 text-red-600">
+              Erro ao carregar ofertas do Mercado Livre
+            </div>
+          ) : (
+            deals.map((deal) => (
+              <ProductCard key={deal.id} {...deal} />
+            ))
+          )}
         </div>
       </div>
     </section>
