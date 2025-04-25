@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Search, User } from "lucide-react";
+import { Search, User, LogIn } from "lucide-react";
 
 const Header = () => {
   return (
@@ -30,6 +30,11 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-4">
+          <Link to="/auth">
+            <Button variant="outline" size="sm">
+              <LogIn className="mr-2 h-4 w-4" /> Entrar
+            </Button>
+          </Link>
           <Link to="/account">
             <Button variant="ghost" size="icon">
               <User className="h-5 w-5" />
