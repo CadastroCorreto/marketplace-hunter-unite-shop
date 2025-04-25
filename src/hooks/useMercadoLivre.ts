@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -29,20 +28,16 @@ interface AuthResponse {
   refresh_token: string;
 }
 
-// Certifique-se de que estas credenciais correspondam EXATAMENTE ao que está configurado no Mercado Livre
-// Não altere estes valores a menos que você tenha novas credenciais oficiais do Mercado Livre
-const CLIENT_ID = '2467394478096378';
-const CLIENT_SECRET = 'BOl8KiYyWvnB8JpG37macsUp4XNHbnLe';
+const CLIENT_ID = '652659079305130';
+const CLIENT_SECRET = 'bcHDdHFAijKYPA7s3C73oHmr2U9tSIlP';
 const REDIRECT_URI = 'https://marketplace-hunter-unite-shop.lovable.app/callback/mercadolivre';
 
-// Verifica se temos um token armazenado localmente
 const getStoredToken = (): { access_token: string; expires_at: number; refresh_token: string } | null => {
   const tokenData = localStorage.getItem('ml_token_data');
   if (!tokenData) return null;
   
   try {
     const parsed = JSON.parse(tokenData);
-    // Verifica se o token expirou
     if (parsed.expires_at && parsed.expires_at < Date.now()) {
       console.log('Token expirado, precisa renovar');
       return null;
@@ -55,7 +50,6 @@ const getStoredToken = (): { access_token: string; expires_at: number; refresh_t
   }
 };
 
-// Armazena o token e informações relacionadas
 const storeToken = (data: AuthResponse) => {
   const tokenData = {
     access_token: data.access_token,
@@ -69,7 +63,6 @@ const storeToken = (data: AuthResponse) => {
   return tokenData;
 };
 
-// Obtém o URL de autorização para o fluxo OAuth
 export const getAuthorizationUrl = () => {
   const params = new URLSearchParams({
     response_type: 'code',
@@ -82,7 +75,6 @@ export const getAuthorizationUrl = () => {
   return authUrl;
 };
 
-// Troca o código de autorização por um token de acesso
 const exchangeCodeForToken = async (code: string): Promise<AuthResponse> => {
   console.log('Trocando código por token...');
   
@@ -111,7 +103,6 @@ const exchangeCodeForToken = async (code: string): Promise<AuthResponse> => {
     const data: AuthResponse = await response.json();
     console.log('Token obtido com sucesso via código de autorização');
     
-    // Armazena o token e retorna os dados
     storeToken(data);
     return data;
   } catch (error) {
@@ -120,7 +111,6 @@ const exchangeCodeForToken = async (code: string): Promise<AuthResponse> => {
   }
 };
 
-// Atualiza um token expirado usando o refresh token
 const refreshAccessToken = async (refreshToken: string): Promise<AuthResponse> => {
   console.log('Atualizando token com refresh token...');
   
@@ -148,7 +138,6 @@ const refreshAccessToken = async (refreshToken: string): Promise<AuthResponse> =
     const data: AuthResponse = await response.json();
     console.log('Token atualizado com sucesso');
     
-    // Armazena o novo token e retorna os dados
     storeToken(data);
     return data;
   } catch (error) {
@@ -157,7 +146,6 @@ const refreshAccessToken = async (refreshToken: string): Promise<AuthResponse> =
   }
 };
 
-// Alternativa para quando o usuário não está autenticado via OAuth
 const getClientCredentialsToken = async (): Promise<string> => {
   console.log('Obtendo token via client credentials...');
   
@@ -190,16 +178,13 @@ const getClientCredentialsToken = async (): Promise<string> => {
   }
 };
 
-// Função para obter o token de acesso, com diferentes estratégias
 const getAccessToken = async (): Promise<string> => {
-  // 1. Verificar token armazenado
   const storedToken = getStoredToken();
   if (storedToken && storedToken.access_token) {
     console.log('Usando token armazenado');
     return storedToken.access_token;
   }
   
-  // 2. Tentar atualizar com refresh token se disponível
   if (storedToken && storedToken.refresh_token) {
     try {
       console.log('Tentando atualizar com refresh token');
@@ -207,16 +192,13 @@ const getAccessToken = async (): Promise<string> => {
       return refreshedData.access_token;
     } catch (error) {
       console.error('Falha ao usar refresh token, recorrendo a client credentials');
-      // Falha ao atualizar, limpar dados armazenados
       localStorage.removeItem('ml_token_data');
     }
   }
   
-  // 3. Último recurso: usar client credentials
   return getClientCredentialsToken();
 };
 
-// Hook para processar o retorno da autenticação OAuth do Mercado Livre
 export const useProcessMercadoLivreAuth = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -225,7 +207,6 @@ export const useProcessMercadoLivreAuth = () => {
   
   useEffect(() => {
     const processAuthCode = async () => {
-      // Verifica se estamos na rota de callback e se há um código
       if (!location.pathname.includes('/callback/mercadolivre')) {
         return;
       }
@@ -247,7 +228,6 @@ export const useProcessMercadoLivreAuth = () => {
         return;
       }
       
-      // Evita processamento duplicado
       if (isProcessing) return;
       setIsProcessing(true);
       
@@ -255,20 +235,14 @@ export const useProcessMercadoLivreAuth = () => {
         console.log('Processando código de autorização:', code);
         await exchangeCodeForToken(code);
         
-        // Opcional: Armazenar conexão no Supabase se o usuário estiver logado
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          // Implementar lógica para salvar a conexão no Supabase (opcional)
-          // await saveConnectionToSupabase(session.user.id);
+          toast({
+            title: "Conta conectada",
+            description: "Sua conta do Mercado Livre foi conectada com sucesso!",
+          });
+          navigate('/marketplaces');
         }
-        
-        toast({
-          title: "Conta conectada",
-          description: "Sua conta do Mercado Livre foi conectada com sucesso!",
-        });
-        
-        // Redireciona para a página principal ou de marketplaces
-        navigate('/marketplaces');
       } catch (error) {
         console.error('Erro ao processar autenticação:', error);
         toast({
@@ -294,7 +268,6 @@ const fetchFeaturedProducts = async () => {
     const accessToken = await getAccessToken();
     
     console.log('Token obtido, buscando produtos...');
-    // Usando a API de tendências para obter produtos em destaque
     const response = await fetch(
       'https://api.mercadolibre.com/trends/MLB',
       {
@@ -317,10 +290,8 @@ const fetchFeaturedProducts = async () => {
       return [];
     }
     
-    // Pegar os primeiros 3 produtos das tendências
     const firstThreeTrends = trends.slice(0, 3);
     
-    // Para cada tendência, buscar detalhes do produto
     const productDetailsPromises = firstThreeTrends.map(async (trend: any) => {
       const keyword = trend.keyword;
       const searchResponse = await fetch(
@@ -352,7 +323,6 @@ const fetchFeaturedProducts = async () => {
   }
 };
 
-// Verifica se o usuário está conectado ao Mercado Livre
 export const useIsMercadoLivreConnected = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   
@@ -360,7 +330,6 @@ export const useIsMercadoLivreConnected = () => {
     const storedToken = getStoredToken();
     setIsConnected(!!storedToken);
     
-    // Verificar a cada 5 minutos ou quando a janela receber foco
     const checkToken = () => {
       const currentToken = getStoredToken();
       setIsConnected(!!currentToken);
@@ -378,7 +347,6 @@ export const useIsMercadoLivreConnected = () => {
   return isConnected;
 };
 
-// Hook para desconectar a conta do Mercado Livre
 export const useDisconnectMercadoLivre = () => {
   const { toast } = useToast();
   
@@ -389,14 +357,11 @@ export const useDisconnectMercadoLivre = () => {
       title: "Conta desconectada",
       description: "Sua conta do Mercado Livre foi desconectada com sucesso.",
     });
-    
-    // Opcional: Remover a conexão no Supabase se o usuário estiver logado
   };
   
   return { disconnect };
 };
 
-// Hook principal para usar o Mercado Livre
 export const useMercadoLivre = () => {
   const { toast } = useToast();
   
@@ -404,8 +369,8 @@ export const useMercadoLivre = () => {
     queryKey: ['mercadoLivre', 'featured'],
     queryFn: fetchFeaturedProducts,
     retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     meta: {
       onError: (error: Error) => {
         toast({
