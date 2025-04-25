@@ -29,9 +29,9 @@ interface AuthResponse {
   refresh_token: string;
 }
 
-// Credenciais do Mercado Livre
-const CLIENT_ID = '5508932736729572';
-const CLIENT_SECRET = 'EiDuaVchmQNUoYsJoQQgjsZpWQYUNvQE';
+// Credenciais do Mercado Livre - Atualizadas
+const CLIENT_ID = '7341590911785412';
+const CLIENT_SECRET = 'epTgggVJAYLufgCQzvt88BTRNgzHnXpD';
 const REDIRECT_URI = 'https://marketplace-hunter-unite-shop.lovable.app/callback/mercadolivre';
 
 // Verifica se temos um token armazenado localmente

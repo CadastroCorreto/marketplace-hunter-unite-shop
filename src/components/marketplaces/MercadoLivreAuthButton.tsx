@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { getAuthorizationUrl, useIsMercadoLivreConnected, useDisconnectMercadoLivre } from '@/hooks/useMercadoLivre';
+import { ShoppingBag } from "lucide-react";
 
 const MercadoLivreAuthButton = () => {
   const isConnected = useIsMercadoLivreConnected();
@@ -22,12 +23,21 @@ const MercadoLivreAuthButton = () => {
       variant={isConnected ? "destructive" : "default"}
       className="flex items-center gap-2"
     >
-      <img 
-        src="https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadolibre/logo-small.png"
-        alt="Mercado Livre" 
-        className="w-6 h-6" 
-      />
-      {isConnected ? "Desconectar Mercado Livre" : "Conectar ao Mercado Livre"}
+      {isConnected ? (
+        <>
+          <ShoppingBag className="w-5 h-5" />
+          Desconectar Mercado Livre
+        </>
+      ) : (
+        <>
+          <img 
+            src="https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadolibre/logo-small.png"
+            alt="Mercado Livre" 
+            className="w-6 h-6" 
+          />
+          Conectar ao Mercado Livre
+        </>
+      )}
     </Button>
   );
 };
