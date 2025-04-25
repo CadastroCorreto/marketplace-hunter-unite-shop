@@ -1,5 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { useToast } from "@/hooks/use-toast";
 
 interface MercadoLivreItem {
   id: string;
@@ -16,12 +17,22 @@ interface MercadoLivreResponse {
   results: MercadoLivreItem[];
 }
 
+// Usando uma abordagem mais simples com acesso anônimo 
+// às APIs públicas do Mercado Livre
 const fetchFeaturedProducts = async () => {
+  // Endpoint para categorias populares de eletrônicos no Brasil
+  // Não requer autenticação para este endpoint público
   const response = await fetch(
-    'https://api.mercadolibre.com/sites/MLB/search?category=MLB1051&sort=relevance&limit=3'
+    'https://api.mercadolibre.com/sites/MLB/search?category=MLB1051&sort=relevance&limit=3',
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
   );
   
   if (!response.ok) {
+    console.error('Erro na requisição:', await response.text());
     throw new Error('Falha ao buscar produtos do Mercado Livre');
   }
   
@@ -30,8 +41,23 @@ const fetchFeaturedProducts = async () => {
 };
 
 export const useMercadoLivre = () => {
+  const { toast } = useToast();
+  
   return useQuery({
     queryKey: ['mercadoLivre', 'featured'],
-    queryFn: fetchFeaturedProducts
+    queryFn: fetchFeaturedProducts,
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os produtos do Mercado Livre",
+          variant: "destructive"
+        });
+        console.error("Erro ao buscar produtos:", error);
+      }
+    }
   });
 };

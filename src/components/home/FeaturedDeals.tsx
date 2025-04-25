@@ -1,7 +1,11 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import ProductCard from '../search/ProductCard';
 import { useMercadoLivre } from '@/hooks/useMercadoLivre';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const MOCK_OTHER_DEALS = [
   {
@@ -68,10 +72,10 @@ const FeaturedDeals = () => {
     rating: 4.8
   });
 
-  const deals = [
-    ...(mlProducts ? [formatMercadoLivreProduct(mlProducts[0])] : []),
-    ...MOCK_OTHER_DEALS.slice(1)
-  ];
+  // Use os produtos do Mercado Livre se estiverem disponíveis, senão use os dados simulados
+  const deals = mlProducts?.length 
+    ? [formatMercadoLivreProduct(mlProducts[0]), ...MOCK_OTHER_DEALS.slice(1)]
+    : MOCK_OTHER_DEALS;
 
   return (
     <section className="py-16 px-4 bg-white">
@@ -85,13 +89,29 @@ const FeaturedDeals = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
-            <div className="col-span-full text-center py-8">
-              Carregando ofertas...
-            </div>
+            <>
+              {[1, 2, 3].map((n) => (
+                <Card key={n} className="overflow-hidden p-4 flex flex-col">
+                  <Skeleton className="w-full h-48 mb-4" />
+                  <Skeleton className="w-3/4 h-5 mb-2" />
+                  <Skeleton className="w-1/2 h-4 mb-4" />
+                  <Skeleton className="w-full h-10 mt-auto" />
+                </Card>
+              ))}
+            </>
           ) : error ? (
-            <div className="col-span-full text-center py-8 text-red-600">
-              Erro ao carregar ofertas do Mercado Livre
-            </div>
+            <>
+              <Alert variant="destructive" className="col-span-full mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Atenção</AlertTitle>
+                <AlertDescription>
+                  Não foi possível carregar os produtos do Mercado Livre. Mostrando ofertas alternativas.
+                </AlertDescription>
+              </Alert>
+              {deals.map((deal) => (
+                <ProductCard key={deal.id} {...deal} />
+              ))}
+            </>
           ) : (
             deals.map((deal) => (
               <ProductCard key={deal.id} {...deal} />
