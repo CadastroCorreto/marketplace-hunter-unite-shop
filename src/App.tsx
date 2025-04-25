@@ -10,6 +10,7 @@ import MarketplacesPage from "./pages/MarketplacesPage";
 import AccountPage from "./pages/AccountPage";
 import NotFound from "./pages/NotFound";
 import MercadoLivreCallbackPage from "./pages/MercadoLivreCallbackPage";
+import MercadoLivreComparisonPage from "./pages/MercadoLivreComparisonPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/search" element={<SearchPage />} />
           <Route path="/marketplaces" element={<MarketplacesPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/comparison" element={<MercadoLivreComparisonPage />} />
           <Route path="/callback/mercadolivre" element={<MercadoLivreCallbackPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

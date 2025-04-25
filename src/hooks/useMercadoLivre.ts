@@ -178,7 +178,7 @@ const getClientCredentialsToken = async (): Promise<string> => {
   }
 };
 
-const getAccessToken = async (): Promise<string> => {
+export const getAccessToken = async (): Promise<string> => {
   const storedToken = getStoredToken();
   if (storedToken && storedToken.access_token) {
     console.log('Usando token armazenado');
