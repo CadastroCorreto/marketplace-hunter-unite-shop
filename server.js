@@ -1,4 +1,5 @@
 
+// CommonJS module for compatibility with Render deployment
 const express = require('express');
 const path = require('path');
 const compression = require('compression');
