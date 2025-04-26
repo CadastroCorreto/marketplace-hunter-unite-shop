@@ -17,7 +17,8 @@ export const generateDebugJson = () => {
       refresh_token: `${parsedToken.refresh_token?.substring(0, 10)}...`,
       expires_at: parsedToken.expires_at,
       expires_at_formatted: parsedToken.expires_at ? new Date(parsedToken.expires_at).toLocaleString() : null,
-      user_id: parsedToken.user_id
+      user_id: parsedToken.user_id,
+      token_lifetime_minutes: parsedToken.expires_at ? Math.round((parsedToken.expires_at - Date.now()) / (60 * 1000)) : null
     } : null,
     tokenStatus: checkTokenStatus(),
     browser: {
@@ -33,6 +34,7 @@ export const generateDebugJson = () => {
       timeDifference: parsedToken?.expires_at ? Math.floor((parsedToken.expires_at - Date.now()) / 1000) + ' segundos' : null,
       timeSinceCreation: parsedToken?.expires_at ? Math.floor((Date.now() - (parsedToken.expires_at - (21600 * 1000))) / 1000 / 60) + ' minutos' : null,
       localStorageAvailable: checkLocalStorageAvailable(),
+      authHistory: getAuthHistoryFromStorage()
     }
   };
   
@@ -47,7 +49,16 @@ export const generateDebugJson = () => {
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
   
+  // Also log to console for browser debugging
   console.log('Dados de debug gerados:', debugData);
+  
+  // Add this auth attempt to history for future debugging
+  addAuthHistoryEntry({
+    type: 'debug_export',
+    timestamp: Date.now(),
+    tokenValid: debugData.tokenStatus.valid
+  });
+  
   return debugData;
 };
 
@@ -60,6 +71,34 @@ const checkLocalStorageAvailable = () => {
     return true;
   } catch (e) {
     return false;
+  }
+};
+
+// Função para armazenar histórico de autenticação para debug
+const addAuthHistoryEntry = (entry: any) => {
+  try {
+    const history = getAuthHistoryFromStorage();
+    history.push(entry);
+    
+    // Manter apenas os últimos 20 eventos
+    while (history.length > 20) {
+      history.shift();
+    }
+    
+    localStorage.setItem('ml_auth_history', JSON.stringify(history));
+  } catch (e) {
+    console.error('Erro ao armazenar histórico de autenticação:', e);
+  }
+};
+
+// Função para recuperar histórico de autenticação
+const getAuthHistoryFromStorage = () => {
+  try {
+    const history = localStorage.getItem('ml_auth_history');
+    return history ? JSON.parse(history) : [];
+  } catch (e) {
+    console.error('Erro ao recuperar histórico de autenticação:', e);
+    return [];
   }
 };
 
@@ -98,6 +137,15 @@ export const checkTokenStatus = () => {
     }
     
     if (parsedToken.expires_at < now) {
+      // Add this auth attempt to history for future debugging
+      addAuthHistoryEntry({
+        type: 'token_check',
+        timestamp: now,
+        result: 'expired',
+        expires_at: parsedToken.expires_at,
+        diff_minutes: Math.floor((now - parsedToken.expires_at) / 1000 / 60)
+      });
+      
       return {
         valid: false,
         error: 'TOKEN_EXPIRED',
@@ -110,6 +158,16 @@ export const checkTokenStatus = () => {
     }
     
     const minutesRemaining = Math.floor((parsedToken.expires_at - now) / 1000 / 60);
+    
+    // Add this successful auth check to history
+    addAuthHistoryEntry({
+      type: 'token_check',
+      timestamp: now,
+      result: 'valid',
+      minutesRemaining,
+      expires_at: parsedToken.expires_at
+    });
+    
     return {
       valid: true,
       message: `Token válido por mais ${minutesRemaining} minutos.`,
@@ -118,6 +176,14 @@ export const checkTokenStatus = () => {
       secondsRemaining: Math.floor((parsedToken.expires_at - now) / 1000)
     };
   } catch (error) {
+    // Add this failed auth check to history
+    addAuthHistoryEntry({
+      type: 'token_check',
+      timestamp: Date.now(),
+      result: 'error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+    
     return {
       valid: false,
       error: 'TOKEN_PARSE_ERROR',

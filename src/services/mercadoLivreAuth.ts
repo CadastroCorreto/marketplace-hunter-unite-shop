@@ -89,23 +89,32 @@ export const exchangeCodeForToken = async (code: string): Promise<AuthTokenData>
 
     console.log('Resposta da API - Status:', response.status);
     
-    // More detailed error logging
     if (!response.ok) {
-      let errorText = await response.text();
+      const errorText = await response.text();
       console.error('Falha na troca do código. Status:', response.status);
       console.error('Detalhes do erro:', errorText);
       
-      // Tentar analisar o corpo como JSON para melhor tratamento de erro
+      let errorMessage = `Falha ao obter token de acesso: ${response.status}`;
+      let errorType = 'unknown_error';
+      
       try {
         const errorJson = JSON.parse(errorText);
         if (errorJson.error) {
-          throw new Error(`${response.status}: ${errorJson.error} - ${errorJson.error_description || errorJson.message || 'Erro na autenticação'}`);
+          errorType = errorJson.error;
+          
+          // Handle specific error types
+          if (errorJson.error === 'invalid_grant') {
+            errorMessage = 'O código de autorização expirou ou já foi utilizado. Por favor, tente novamente.';
+            throw new Error(`invalid_grant: ${errorMessage}`);
+          }
+          
+          errorMessage = `${errorJson.error}: ${errorJson.error_description || errorJson.message || 'Erro na autenticação'}`;
         }
       } catch (parseError) {
-        // Se não conseguiu analisar como JSON, usa o texto bruto
+        // If failed to parse as JSON, use raw text
       }
       
-      throw new Error(`Falha ao obter token de acesso: ${response.status} - ${errorText}`);
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -144,10 +153,11 @@ export const refreshAccessToken = async (refreshToken: string): Promise<AuthToke
     });
     
     if (!response.ok) {
-      let errorText = await response.text();
+      const errorText = await response.text();
       console.error('Falha ao renovar token:', response.status, errorText);
       
-      // Tentar analisar o corpo como JSON para melhor tratamento de erro
+      let errorMessage = `Falha ao renovar token de acesso: ${response.status}`;
+      
       try {
         const errorJson = JSON.parse(errorText);
         if (errorJson.error) {
@@ -162,7 +172,7 @@ export const refreshAccessToken = async (refreshToken: string): Promise<AuthToke
         // Se não conseguiu analisar como JSON, usa o texto bruto
       }
       
-      throw new Error(`Falha ao renovar token de acesso: ${response.status} - ${errorText}`);
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();

@@ -71,12 +71,26 @@ export const useProcessMercadoLivreAuth = () => {
         setTimeout(() => navigate('/marketplaces'), 1500);
       } catch (error) {
         console.error('Erro ao processar autenticação:', error);
-        const errorMsg = error instanceof Error ? error.message : "Não foi possível conectar ao Mercado Livre.";
+        
+        // Enhanced error handling
+        let errorMsg = error instanceof Error ? error.message : "Não foi possível conectar ao Mercado Livre.";
+        
+        // Check for specific error types
+        if (error instanceof Error && error.message.includes('invalid_grant')) {
+          errorMsg = "O código de autorização expirou ou já foi usado. Por favor, tente conectar novamente.";
+          
+          // Clear any existing token data as it may be invalid
+          clearStoredToken();
+        }
+        
         setError(errorMsg);
         
         toast.error("Falha na conexão", {
           description: errorMsg,
         });
+        
+        // Redirect back to the connection page after showing the error
+        setTimeout(() => navigate('/connect/mercadolivre'), 3000);
       } finally {
         setIsProcessing(false);
       }

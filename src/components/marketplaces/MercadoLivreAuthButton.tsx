@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   getAuthorizationUrl, 
@@ -19,7 +19,30 @@ const MercadoLivreAuthButton = () => {
   const { refreshToken, isRefreshing } = useRefreshMercadoLivreToken();
   const navigate = useNavigate();
   const [showTokenInfo, setShowTokenInfo] = useState(false);
-  const tokenStatus = checkTokenStatus();
+  const [tokenStatus, setTokenStatus] = useState(checkTokenStatus());
+  
+  // Update token status periodically
+  useEffect(() => {
+    const updateTokenStatus = () => {
+      setTokenStatus(checkTokenStatus());
+    };
+    
+    // Update on mount and every minute after
+    updateTokenStatus();
+    const interval = setInterval(updateTokenStatus, 60 * 1000);
+    
+    // Also update when window regains focus
+    const handleFocus = () => {
+      updateTokenStatus();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
   
   const handleAuth = () => {
     if (isConnected) {
@@ -38,6 +61,7 @@ const MercadoLivreAuthButton = () => {
   const handleRefreshToken = async () => {
     const result = await refreshToken();
     if (result) {
+      setTokenStatus(checkTokenStatus());
       setShowTokenInfo(true); // Mostrar informações atualizadas após renovar
     }
   };
