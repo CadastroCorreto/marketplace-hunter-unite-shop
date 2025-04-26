@@ -267,15 +267,19 @@ const fetchFeaturedProducts = async () => {
     console.log('Iniciando busca de produtos em destaque...');
     const accessToken = await getAccessToken();
     
-    console.log('Token obtido, buscando produtos...');
+    console.log('Token obtido:', accessToken ? 'Sim' : 'Não');
+    
     const response = await fetch(
       'https://api.mercadolibre.com/trends/MLB',
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         }
       }
     );
+    
+    console.log('Resposta da API:', response.status, response.statusText);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -284,6 +288,8 @@ const fetchFeaturedProducts = async () => {
     }
     
     const trends = await response.json();
+    
+    console.log('Tendências recebidas:', trends.length);
     
     if (!trends || !trends.length) {
       console.log('Nenhuma tendência encontrada, retornando array vazio');
@@ -294,11 +300,14 @@ const fetchFeaturedProducts = async () => {
     
     const productDetailsPromises = firstThreeTrends.map(async (trend: any) => {
       const keyword = trend.keyword;
+      console.log(`Buscando detalhes para: ${keyword}`);
+      
       const searchResponse = await fetch(
         `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(keyword)}&limit=1`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
           }
         }
       );
@@ -318,9 +327,34 @@ const fetchFeaturedProducts = async () => {
     console.log('Produtos obtidos com sucesso:', validProducts.length);
     return validProducts;
   } catch (error) {
-    console.error('Erro ao buscar produtos:', error);
+    console.error('Erro no fluxo completo de busca de produtos:', error);
     throw error;
   }
+};
+
+export const useMercadoLivre = () => {
+  const { toast } = useToast();
+  
+  return useQuery({
+    queryKey: ['mercadoLivre', 'featured'],
+    queryFn: fetchFeaturedProducts,
+    retry: 2,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    meta: {
+      onError: (error: Error) => {
+        const errorMessage = error.message || 'Erro desconhecido ao buscar produtos';
+        
+        toast({
+          title: "Erro na API do Mercado Livre",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        
+        console.error("Erro detalhado:", error);
+      }
+    }
+  });
 };
 
 export const useIsMercadoLivreConnected = () => {
@@ -360,26 +394,4 @@ export const useDisconnectMercadoLivre = () => {
   };
   
   return { disconnect };
-};
-
-export const useMercadoLivre = () => {
-  const { toast } = useToast();
-  
-  return useQuery({
-    queryKey: ['mercadoLivre', 'featured'],
-    queryFn: fetchFeaturedProducts,
-    retry: 2,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    meta: {
-      onError: (error: Error) => {
-        toast({
-          title: "Erro na API do Mercado Livre",
-          description: `${error.message}. Verifique as credenciais e permissões.`,
-          variant: "destructive"
-        });
-        console.error("Erro detalhado:", error);
-      }
-    }
-  });
 };
