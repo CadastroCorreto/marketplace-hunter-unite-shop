@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
 
@@ -11,6 +11,8 @@ import {
   exchangeCodeForToken, 
   getStoredToken,
   refreshAccessToken,
+  clearStoredToken,
+  checkTokenNeedsRenewal,
   AuthTokenData
 } from '@/services/mercadoLivreAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +20,6 @@ import { supabase } from '@/integrations/supabase/client';
 export const useProcessMercadoLivreAuth = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -36,10 +37,8 @@ export const useProcessMercadoLivreAuth = () => {
         console.error('Erro retornado na URL:', errorMsg);
         setError(errorMsg);
         
-        toast({
-          title: "Erro na autenticação",
+        toast.error("Erro na autenticação", {
           description: errorMsg,
-          variant: "destructive"
         });
         
         return;
@@ -50,10 +49,8 @@ export const useProcessMercadoLivreAuth = () => {
         console.error(errorMsg);
         setError(errorMsg);
         
-        toast({
-          title: "Erro na autenticação",
+        toast.error("Erro na autenticação", {
           description: errorMsg,
-          variant: "destructive"
         });
         
         setTimeout(() => navigate('/connect/mercadolivre'), 2000);
@@ -67,8 +64,7 @@ export const useProcessMercadoLivreAuth = () => {
         console.log('Processando código de autorização:', code);
         await exchangeCodeForToken(code);
         
-        toast({
-          title: "Conta conectada",
+        toast.success("Conta conectada", {
           description: "Sua conta do Mercado Livre foi conectada com sucesso!",
         });
         
@@ -78,10 +74,8 @@ export const useProcessMercadoLivreAuth = () => {
         const errorMsg = error instanceof Error ? error.message : "Não foi possível conectar ao Mercado Livre.";
         setError(errorMsg);
         
-        toast({
-          title: "Falha na conexão",
+        toast.error("Falha na conexão", {
           description: errorMsg,
-          variant: "destructive"
         });
       } finally {
         setIsProcessing(false);
@@ -89,13 +83,30 @@ export const useProcessMercadoLivreAuth = () => {
     };
     
     processAuthCode();
-  }, [location, navigate, toast, isProcessing]);
+  }, [location, navigate, isProcessing]);
   
   return { isProcessing, error };
 };
 
 export const useMercadoLivre = () => {
-  const { toast } = useToast();
+  const { refreshToken } = useRefreshMercadoLivreToken();
+  
+  // Tentar renovar token automaticamente se necessário
+  useEffect(() => {
+    const checkAndRefreshToken = async () => {
+      if (checkTokenNeedsRenewal()) {
+        try {
+          console.log('Token precisa ser renovado automaticamente');
+          await refreshToken();
+        } catch (error) {
+          console.error('Falha ao renovar token automaticamente:', error);
+          // Não exibe toast aqui para não interromper o usuário
+        }
+      }
+    };
+    
+    checkAndRefreshToken();
+  }, [refreshToken]);
   
   return useQuery({
     queryKey: ['mercadoLivre', 'featured'],
@@ -107,10 +118,8 @@ export const useMercadoLivre = () => {
       onError: (error: Error) => {
         const errorMessage = error.message || 'Erro desconhecido ao buscar produtos';
         
-        toast({
-          title: "Erro na API do Mercado Livre",
+        toast.error("Erro na API do Mercado Livre", {
           description: errorMessage,
-          variant: "destructive"
         });
         
         console.error("Erro detalhado:", error);
@@ -144,13 +153,13 @@ export const useIsMercadoLivreConnected = () => {
 };
 
 export const useDisconnectMercadoLivre = () => {
-  const disconnect = () => {
-    localStorage.removeItem('ml_token_data');
+  const disconnect = useCallback(() => {
+    clearStoredToken();
     
     toast.success("Conta desconectada com sucesso", {
       description: "Sua conta do Mercado Livre foi desconectada."
     });
-  };
+  }, []);
   
   return { disconnect };
 };
@@ -160,7 +169,7 @@ export const useRefreshMercadoLivreToken = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshAttempt, setLastRefreshAttempt] = useState<Date | null>(null);
   
-  const refreshToken = async (): Promise<AuthTokenData | null> => {
+  const refreshToken = useCallback(async (): Promise<AuthTokenData | null> => {
     const storedToken = getStoredToken();
     setIsRefreshing(true);
     
@@ -196,7 +205,7 @@ export const useRefreshMercadoLivreToken = () => {
         if (error.message.includes('invalid_grant') || error.message.includes('400')) {
           errorMessage = "O token de renovação expirou ou é inválido. Por favor, conecte sua conta novamente.";
           // Limpa o token armazenado pois não é mais válido
-          localStorage.removeItem('ml_token_data');
+          clearStoredToken();
         }
       }
       
@@ -208,7 +217,7 @@ export const useRefreshMercadoLivreToken = () => {
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, []);
   
   return { refreshToken, isRefreshing, lastRefreshAttempt };
 };

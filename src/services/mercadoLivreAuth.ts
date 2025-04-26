@@ -23,9 +23,10 @@ export const getStoredToken = (): AuthTokenData | null => {
     const parsed: AuthTokenData = JSON.parse(tokenData);
     console.log('🕰️ Token expiração:', new Date(parsed.expires_at).toLocaleString());
     
-    if (parsed.expires_at && parsed.expires_at < Date.now()) {
-      console.warn('🚨 Token expirado, precisa renovar');
-      return null;
+    // Verificar se o token está próximo da expiração (5 minutos)
+    if (parsed.expires_at && parsed.expires_at < (Date.now() + 5 * 60 * 1000)) {
+      console.warn('🚨 Token expirado ou próximo de expirar, precisa renovar');
+      return parsed; // Retornamos o token mesmo expirado para que o processo de renovação possa usá-lo
     }
     
     return parsed;
@@ -90,9 +91,20 @@ export const exchangeCodeForToken = async (code: string): Promise<AuthTokenData>
     
     // More detailed error logging
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText = await response.text();
       console.error('Falha na troca do código. Status:', response.status);
       console.error('Detalhes do erro:', errorText);
+      
+      // Tentar analisar o corpo como JSON para melhor tratamento de erro
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error) {
+          throw new Error(`${response.status}: ${errorJson.error} - ${errorJson.error_description || errorJson.message || 'Erro na autenticação'}`);
+        }
+      } catch (parseError) {
+        // Se não conseguiu analisar como JSON, usa o texto bruto
+      }
+      
       throw new Error(`Falha ao obter token de acesso: ${response.status} - ${errorText}`);
     }
 
@@ -112,7 +124,7 @@ export const exchangeCodeForToken = async (code: string): Promise<AuthTokenData>
   }
 };
 
-// Add a function to refresh the token
+// Função melhorada para renovar o token
 export const refreshAccessToken = async (refreshToken: string): Promise<AuthTokenData> => {
   console.log('Renovando token de acesso...');
   
@@ -132,8 +144,24 @@ export const refreshAccessToken = async (refreshToken: string): Promise<AuthToke
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText = await response.text();
       console.error('Falha ao renovar token:', response.status, errorText);
+      
+      // Tentar analisar o corpo como JSON para melhor tratamento de erro
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error) {
+          // Verificar se é um erro de token inválido
+          if (errorJson.error === 'invalid_grant') {
+            throw new Error('invalid_grant: O token de renovação é inválido ou expirou. Necessário reautenticar.');
+          }
+          
+          throw new Error(`${response.status}: ${errorJson.error} - ${errorJson.error_description || errorJson.message || 'Erro na renovação do token'}`);
+        }
+      } catch (parseError) {
+        // Se não conseguiu analisar como JSON, usa o texto bruto
+      }
+      
       throw new Error(`Falha ao renovar token de acesso: ${response.status} - ${errorText}`);
     }
     
@@ -148,4 +176,21 @@ export const refreshAccessToken = async (refreshToken: string): Promise<AuthToke
     console.error('Erro ao renovar token:', error);
     throw error;
   }
+};
+
+// Função para verificar se um token precisa ser renovado
+export const checkTokenNeedsRenewal = (): boolean => {
+  const token = getStoredToken();
+  
+  if (!token) return false; // Sem token, não há nada para renovar
+  
+  // Verifica se o token expira nos próximos 5 minutos
+  const fiveMinutesFromNow = Date.now() + 5 * 60 * 1000;
+  return token.expires_at < fiveMinutesFromNow;
+};
+
+// Função para limpar o token ao fazer logout
+export const clearStoredToken = (): void => {
+  localStorage.removeItem('ml_token_data');
+  console.log('🗑️ Token removido do armazenamento local');
 };

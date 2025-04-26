@@ -19,12 +19,7 @@ export const generateDebugJson = () => {
       expires_at_formatted: parsedToken.expires_at ? new Date(parsedToken.expires_at).toLocaleString() : null,
       user_id: parsedToken.user_id
     } : null,
-    tokenStatus: {
-      hasToken: !!parsedToken,
-      isExpired: parsedToken?.expires_at ? parsedToken.expires_at < Date.now() : null,
-      expiresAt: parsedToken?.expires_at ? new Date(parsedToken.expires_at).toLocaleString() : null,
-      timeUntilExpiry: parsedToken?.expires_at ? Math.floor((parsedToken.expires_at - Date.now()) / 1000 / 60) + ' minutos' : null,
-    },
+    tokenStatus: checkTokenStatus(),
     browser: {
       userAgent: navigator.userAgent,
       language: navigator.language,
@@ -32,7 +27,13 @@ export const generateDebugJson = () => {
     },
     currentUrl: window.location.href,
     currentTime: currentTime.toLocaleString(),
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    errorDetails: {
+      tokenExpired: parsedToken?.expires_at ? parsedToken.expires_at < Date.now() : null,
+      timeDifference: parsedToken?.expires_at ? Math.floor((parsedToken.expires_at - Date.now()) / 1000) + ' segundos' : null,
+      timeSinceCreation: parsedToken?.expires_at ? Math.floor((Date.now() - (parsedToken.expires_at - (21600 * 1000))) / 1000 / 60) + ' minutos' : null,
+      localStorageAvailable: checkLocalStorageAvailable(),
+    }
   };
   
   // Create and download JSON file
@@ -40,13 +41,26 @@ export const generateDebugJson = () => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'mercadolivre-debug.json';
+  a.download = `mercadolivre-debug-${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
   
+  console.log('Dados de debug gerados:', debugData);
   return debugData;
+};
+
+// Função para verificar se o localStorage está disponível
+const checkLocalStorageAvailable = () => {
+  try {
+    const testKey = '__test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return true;
+  } catch (e) {
+    return false;
+  }
 };
 
 // Função útil para verificar o status do token e identificar problemas
@@ -56,7 +70,8 @@ export const checkTokenStatus = () => {
     return {
       valid: false,
       error: 'TOKEN_MISSING',
-      message: 'Nenhum token encontrado. É necessário autenticar.'
+      message: 'Nenhum token encontrado. É necessário autenticar.',
+      details: 'Os tokens são armazenados no localStorage após a autenticação com o Mercado Livre.'
     };
   }
   
@@ -68,7 +83,8 @@ export const checkTokenStatus = () => {
       return {
         valid: false,
         error: 'TOKEN_INVALID',
-        message: 'Token de acesso ausente ou inválido.'
+        message: 'Token de acesso ausente ou inválido.',
+        details: 'O token armazenado não contém um access_token válido.'
       };
     }
     
@@ -76,7 +92,8 @@ export const checkTokenStatus = () => {
       return {
         valid: false,
         error: 'EXPIRY_MISSING',
-        message: 'Data de expiração não definida no token.'
+        message: 'Data de expiração não definida no token.',
+        details: 'O token armazenado não contém informação sobre a data de expiração.'
       };
     }
     
@@ -85,8 +102,10 @@ export const checkTokenStatus = () => {
         valid: false,
         error: 'TOKEN_EXPIRED',
         message: 'Token expirado. Última validade: ' + new Date(parsedToken.expires_at).toLocaleString(),
+        details: 'O token de acesso expirou e precisa ser renovado.',
         expired: true,
-        canRefresh: !!parsedToken.refresh_token
+        canRefresh: !!parsedToken.refresh_token,
+        expiredAgo: Math.floor((now - parsedToken.expires_at) / 1000 / 60) + ' minutos atrás'
       };
     }
     
@@ -95,13 +114,15 @@ export const checkTokenStatus = () => {
       valid: true,
       message: `Token válido por mais ${minutesRemaining} minutos.`,
       minutesRemaining,
-      expiresAt: new Date(parsedToken.expires_at).toLocaleString()
+      expiresAt: new Date(parsedToken.expires_at).toLocaleString(),
+      secondsRemaining: Math.floor((parsedToken.expires_at - now) / 1000)
     };
   } catch (error) {
     return {
       valid: false,
       error: 'TOKEN_PARSE_ERROR',
-      message: 'Erro ao analisar token armazenado: ' + (error instanceof Error ? error.message : 'Erro desconhecido')
+      message: 'Erro ao analisar token armazenado: ' + (error instanceof Error ? error.message : 'Erro desconhecido'),
+      details: 'Ocorreu um erro ao tentar analisar o JSON do token armazenado no localStorage.'
     };
   }
 };

@@ -7,7 +7,7 @@ import {
   useDisconnectMercadoLivre,
   useRefreshMercadoLivreToken
 } from '@/hooks/useMercadoLivre';
-import { ShoppingBag, Download, ExternalLink, RefreshCw, AlertCircle, Info } from "lucide-react";
+import { ShoppingBag, Download, ExternalLink, RefreshCw, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { generateDebugJson, checkTokenStatus } from '@/utils/debugExport';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -46,6 +46,12 @@ const MercadoLivreAuthButton = () => {
     if (!tokenStatus.valid) return "text-red-500";
     if (tokenStatus.minutesRemaining && tokenStatus.minutesRemaining < 30) return "text-amber-500";
     return "text-green-500";
+  };
+
+  const getTokenStatusIcon = () => {
+    if (!tokenStatus.valid) return <AlertTriangle className="w-5 h-5 text-red-500" />;
+    if (tokenStatus.minutesRemaining && tokenStatus.minutesRemaining < 30) return <Info className="w-5 h-5 text-amber-500" />;
+    return <Info className="w-5 h-5 text-green-500" />;
   };
   
   return (
@@ -104,7 +110,7 @@ const MercadoLivreAuthButton = () => {
                   onClick={() => setShowTokenInfo(!showTokenInfo)}
                   className={getTokenStatusColor()}
                 >
-                  <Info className="w-5 h-5" />
+                  {getTokenStatusIcon()}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -131,7 +137,7 @@ const MercadoLivreAuthButton = () => {
                   Expira em: {tokenStatus.expiresAt}
                 </p>
               )}
-              {!tokenStatus.valid && tokenStatus.expired && tokenStatus.canRefresh && (
+              {!tokenStatus.valid && tokenStatus.error === 'TOKEN_EXPIRED' && tokenStatus.canRefresh && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -141,6 +147,17 @@ const MercadoLivreAuthButton = () => {
                 >
                   <RefreshCw className={`w-3 h-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
                   Renovar agora
+                </Button>
+              )}
+              {!tokenStatus.valid && (tokenStatus.error === 'TOKEN_MISSING' || !tokenStatus.canRefresh) && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate('/connect/mercadolivre')}
+                  className="mt-2 text-xs h-7"
+                >
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  Conectar novamente
                 </Button>
               )}
             </div>
