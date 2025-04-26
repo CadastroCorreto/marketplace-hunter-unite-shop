@@ -1,4 +1,3 @@
-
 const express = require('express');
 const path = require('path');
 const compression = require('compression');
@@ -8,9 +7,9 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS Configuration - Allow requests from any origin
+// CORS Configuration - Allow requests only from Lovable domain
 app.use(cors({
-  origin: '*', // Allow all origins
+  origin: 'https://marketplace-hunter-unite-shop.lovable.app', // Specific Lovable domain
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -53,8 +52,6 @@ app.get('/search', async (req, res) => {
 
     console.log(`✅ Backend encontrou ${products.length} produtos para "${query}"`);
     
-    // Add CORS headers explicitly
-    res.header('Access-Control-Allow-Origin', '*');
     res.json(products);
   } catch (error) {
     console.error('🚨 Erro no backend ao buscar produtos:', error.message);
