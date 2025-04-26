@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MercadoLivreProductTable from '@/components/marketplaces/MercadoLivreProductTable';
-import { getAccessToken } from '@/hooks/useMercadoLivre';
+import { fetchProductsByQuery } from '@/services/mercadoLivreApi';
 
 interface MercadoLivreProduct {
   id: string;
@@ -22,10 +22,6 @@ interface MercadoLivreProduct {
     free_shipping: boolean;
   };
   thumbnail: string;
-}
-
-interface SearchResponse {
-  results: MercadoLivreProduct[];
 }
 
 const MercadoLivreComparisonPage = () => {
@@ -44,30 +40,13 @@ const MercadoLivreComparisonPage = () => {
     setHasSearched(true);
     
     try {
-      const accessToken = await getAccessToken();
+      const data = await fetchProductsByQuery(searchQuery);
+      setProducts(data);
       
-      const url = new URL('https://api.mercadolibre.com/sites/MLB/search');
-      url.searchParams.append('q', searchQuery);
-      url.searchParams.append('sort', 'price_asc');
-      url.searchParams.append('limit', '20');
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`);
-      }
-      
-      const data: SearchResponse = await response.json();
-      setProducts(data.results);
-      
-      console.log('Produtos encontrados:', data.results.length);
+      console.log('Produtos encontrados:', data.length);
       
       toast({
-        title: `${data.results.length} produtos encontrados`,
+        title: `${data.length} produtos encontrados`,
         description: `Resultados para "${searchQuery}" ordenados por menor preço`,
       });
     } catch (error) {
