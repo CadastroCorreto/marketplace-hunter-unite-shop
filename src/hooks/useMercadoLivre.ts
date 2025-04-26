@@ -2,8 +2,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { searchProducts } from '@/services/mercadoLivreApi';
 
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  thumbnail: string;
+  permalink: string;
+  shipping: {
+    free_shipping: boolean;
+  };
+  seller: {
+    nickname: string;
+  };
+}
+
 export function useSearchProducts(query: string, limit = 20) {
-  return useQuery({
+  return useQuery<Product[]>({
     queryKey: ['mercadoLivre', 'search', query, limit],
     queryFn: () => searchProducts(query, limit),
     enabled: !!query.trim(),

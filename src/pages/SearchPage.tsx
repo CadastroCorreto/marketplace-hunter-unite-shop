@@ -6,6 +6,7 @@ import { useSearchProducts, useApiStatus } from '@/hooks/useMercadoLivre';
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import MercadoLivreProductTable from '@/components/marketplaces/MercadoLivreProductTable';
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -65,28 +66,32 @@ const SearchPage = () => {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products?.map((product) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            title={product.title}
-            price={product.price}
-            image={product.thumbnail}
-            marketplace={{
-              id: "mercado-livre",
-              name: "Mercado Livre",
-              logo: "https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadolibre/logo__large_plus.png"
-            }}
-            freeShipping={product.shipping?.free_shipping}
-          />
-        ))}
-      </div>
+      {searchQuery && !isLoading && products && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                title={product.title}
+                price={product.price}
+                image={product.thumbnail}
+                marketplace={{
+                  id: "mercado-livre",
+                  name: "Mercado Livre",
+                  logo: "https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadolibre/logo__large_plus.png"
+                }}
+                freeShipping={product.shipping?.free_shipping}
+              />
+            ))}
+          </div>
 
-      {searchQuery && !isLoading && products?.length === 0 && (
-        <div className="text-center py-10">
-          <p className="text-gray-500">Nenhum produto encontrado para "{searchQuery}"</p>
-        </div>
+          {products.length === 0 && (
+            <div className="text-center py-10">
+              <p className="text-gray-500">Nenhum produto encontrado para "{searchQuery}"</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
