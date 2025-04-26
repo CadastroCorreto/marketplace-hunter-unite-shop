@@ -1,3 +1,4 @@
+
 export const generateDebugJson = () => {
   const storedToken = localStorage.getItem('ml_token_data');
   const parsedToken = storedToken ? JSON.parse(storedToken) : null;
@@ -13,7 +14,13 @@ export const generateDebugJson = () => {
       hasToken: !!parsedToken,
       isExpired: parsedToken?.expires_at ? parsedToken.expires_at < Date.now() : null,
       expiresAt: parsedToken?.expires_at ? new Date(parsedToken.expires_at).toLocaleString() : null
-    }
+    },
+    browser: {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      cookiesEnabled: navigator.cookieEnabled
+    },
+    currentUrl: window.location.href
   };
   
   // Create and download JSON file

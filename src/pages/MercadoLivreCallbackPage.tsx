@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useProcessMercadoLivreAuth } from '@/hooks/useMercadoLivre';
 import Layout from '@/components/layout/Layout';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -9,6 +9,12 @@ import { Button } from '@/components/ui/button';
 
 const MercadoLivreCallbackPage = () => {
   const { isProcessing, error } = useProcessMercadoLivreAuth();
+  
+  // Log the whole URL for debugging
+  useEffect(() => {
+    console.log('URL completa do callback:', window.location.href);
+    console.log('Código na URL:', new URLSearchParams(window.location.search).get('code'));
+  }, []);
   
   return (
     <Layout>
@@ -39,11 +45,20 @@ const MercadoLivreCallbackPage = () => {
                   </Link>
                 </Button>
               </div>
+              <div className="mt-4 text-sm text-gray-500">
+                Se o problema persistir, verifique se você está logado na sua conta do Mercado Livre
+                e tente novamente em alguns minutos.
+              </div>
             </div>
           ) : (
-            <p className="text-gray-600">
-              Você será redirecionado em instantes...
-            </p>
+            <div className="space-y-4">
+              <p className="text-green-600 font-medium">
+                Autenticação concluída com sucesso!
+              </p>
+              <p className="text-gray-600">
+                Você será redirecionado em instantes...
+              </p>
+            </div>
           )}
         </div>
       </div>

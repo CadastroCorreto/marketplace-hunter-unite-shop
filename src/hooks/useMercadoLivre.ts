@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from 'react';
@@ -7,7 +8,8 @@ import { fetchFeaturedProducts, fetchProductsByQuery } from '@/services/mercadoL
 import { 
   getAuthorizationUrl, 
   exchangeCodeForToken, 
-  getStoredToken 
+  getStoredToken,
+  refreshAccessToken
 } from '@/services/mercadoLivreAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -152,6 +154,45 @@ export const useDisconnectMercadoLivre = () => {
   };
   
   return { disconnect };
+};
+
+// Add a hook to refresh tokens when needed
+export const useRefreshMercadoLivreToken = () => {
+  const { toast } = useToast();
+  
+  const refreshToken = async () => {
+    const storedToken = getStoredToken();
+    
+    if (!storedToken || !storedToken.refresh_token) {
+      toast({
+        title: "Erro ao renovar token",
+        description: "Nenhum token disponível para renovação. Por favor, conecte sua conta novamente.",
+        variant: "destructive"
+      });
+      return null;
+    }
+    
+    try {
+      const newToken = await refreshAccessToken(storedToken.refresh_token);
+      
+      toast({
+        title: "Token renovado",
+        description: "Seu acesso ao Mercado Livre foi renovado com sucesso.",
+      });
+      
+      return newToken;
+    } catch (error) {
+      toast({
+        title: "Erro ao renovar token",
+        description: "Não foi possível renovar seu acesso. Por favor, conecte sua conta novamente.",
+        variant: "destructive"
+      });
+      
+      return null;
+    }
+  };
+  
+  return { refreshToken };
 };
 
 export { getAuthorizationUrl };

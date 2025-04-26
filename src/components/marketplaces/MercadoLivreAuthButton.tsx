@@ -1,14 +1,20 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { getAuthorizationUrl, useIsMercadoLivreConnected, useDisconnectMercadoLivre } from '@/hooks/useMercadoLivre';
-import { ShoppingBag, Download, ExternalLink } from "lucide-react";
+import { 
+  getAuthorizationUrl, 
+  useIsMercadoLivreConnected, 
+  useDisconnectMercadoLivre,
+  useRefreshMercadoLivreToken
+} from '@/hooks/useMercadoLivre';
+import { ShoppingBag, Download, ExternalLink, RefreshCw } from "lucide-react";
 import { generateDebugJson } from '@/utils/debugExport';
 import { useNavigate } from 'react-router-dom';
 
 const MercadoLivreAuthButton = () => {
   const isConnected = useIsMercadoLivreConnected();
   const { disconnect } = useDisconnectMercadoLivre();
+  const { refreshToken } = useRefreshMercadoLivreToken();
   const navigate = useNavigate();
   
   const handleAuth = () => {
@@ -24,8 +30,12 @@ const MercadoLivreAuthButton = () => {
     generateDebugJson();
   };
   
+  const handleRefreshToken = async () => {
+    await refreshToken();
+  };
+  
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Button 
         onClick={handleAuth}
         variant={isConnected ? "destructive" : "default"}
@@ -47,6 +57,17 @@ const MercadoLivreAuthButton = () => {
           </>
         )}
       </Button>
+      
+      {isConnected && (
+        <Button
+          onClick={handleRefreshToken}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="w-5 h-5" />
+          Renovar Token
+        </Button>
+      )}
       
       <Button
         onClick={handleExportDebug}
