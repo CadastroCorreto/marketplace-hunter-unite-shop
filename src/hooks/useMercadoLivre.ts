@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { searchProducts } from '@/services/mercadoLivreApi';
 
-interface Product {
+export interface Product {
   id: string;
   title: string;
   price: number;
