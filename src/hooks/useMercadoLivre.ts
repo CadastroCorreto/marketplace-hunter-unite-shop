@@ -16,6 +16,7 @@ export const useProcessMercadoLivreAuth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     const processAuthCode = async () => {
@@ -23,18 +24,35 @@ export const useProcessMercadoLivreAuth = () => {
       
       const searchParams = new URLSearchParams(location.search);
       const code = searchParams.get('code');
+      const errorParam = searchParams.get('error');
+      const errorDescription = searchParams.get('error_description');
+      
+      if (errorParam) {
+        const errorMsg = errorDescription || "Houve um problema durante a autenticação com o Mercado Livre.";
+        console.error('Erro retornado na URL:', errorMsg);
+        setError(errorMsg);
+        
+        toast({
+          title: "Erro na autenticação",
+          description: errorMsg,
+          variant: "destructive"
+        });
+        
+        return;
+      }
       
       if (!code) {
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
-        if (error) {
-          toast({
-            title: "Erro na autenticação",
-            description: errorDescription || "Houve um problema durante a autenticação com o Mercado Livre.",
-            variant: "destructive"
-          });
-        }
-        navigate('/');
+        const errorMsg = "Código de autorização não encontrado na URL de retorno.";
+        console.error(errorMsg);
+        setError(errorMsg);
+        
+        toast({
+          title: "Erro na autenticação",
+          description: errorMsg,
+          variant: "destructive"
+        });
+        
+        setTimeout(() => navigate('/connect/mercadolivre'), 2000);
         return;
       }
       
@@ -45,22 +63,22 @@ export const useProcessMercadoLivreAuth = () => {
         console.log('Processando código de autorização:', code);
         await exchangeCodeForToken(code);
         
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          toast({
-            title: "Conta conectada",
-            description: "Sua conta do Mercado Livre foi conectada com sucesso!",
-          });
-          navigate('/marketplaces');
-        }
+        toast({
+          title: "Conta conectada",
+          description: "Sua conta do Mercado Livre foi conectada com sucesso!",
+        });
+        
+        setTimeout(() => navigate('/marketplaces'), 1500);
       } catch (error) {
         console.error('Erro ao processar autenticação:', error);
+        const errorMsg = error instanceof Error ? error.message : "Não foi possível conectar ao Mercado Livre.";
+        setError(errorMsg);
+        
         toast({
           title: "Falha na conexão",
-          description: error instanceof Error ? error.message : "Não foi possível conectar ao Mercado Livre.",
+          description: errorMsg,
           variant: "destructive"
         });
-        navigate('/');
       } finally {
         setIsProcessing(false);
       }
@@ -69,7 +87,7 @@ export const useProcessMercadoLivreAuth = () => {
     processAuthCode();
   }, [location, navigate, toast, isProcessing]);
   
-  return { isProcessing };
+  return { isProcessing, error };
 };
 
 export const useMercadoLivre = () => {

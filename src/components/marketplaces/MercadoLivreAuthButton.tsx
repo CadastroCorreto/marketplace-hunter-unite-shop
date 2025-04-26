@@ -2,18 +2,21 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { getAuthorizationUrl, useIsMercadoLivreConnected, useDisconnectMercadoLivre } from '@/hooks/useMercadoLivre';
-import { ShoppingBag, Download } from "lucide-react";
+import { ShoppingBag, Download, ExternalLink } from "lucide-react";
 import { generateDebugJson } from '@/utils/debugExport';
+import { useNavigate } from 'react-router-dom';
 
 const MercadoLivreAuthButton = () => {
   const isConnected = useIsMercadoLivreConnected();
   const { disconnect } = useDisconnectMercadoLivre();
+  const navigate = useNavigate();
   
   const handleAuth = () => {
     if (isConnected) {
       disconnect();
     } else {
-      window.location.href = getAuthorizationUrl();
+      // Redirecionamos para a página de explicação em vez de diretamente para o Mercado Livre
+      navigate('/connect/mercadolivre');
     }
   };
   

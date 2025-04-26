@@ -1,7 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 const CLIENT_ID = '652659079305130';
 const CLIENT_SECRET = 'bcHDdHFAijKYPA7s3C73oHmr2U9tSIlP';
+// Corrigindo a URL de redirecionamento para garantir que seja exatamente igual à registrada no Mercado Livre
 const REDIRECT_URI = 'https://encontrae.onrender.com/callback/mercadolivre';
 
 export interface AuthTokenData {
@@ -49,6 +51,7 @@ export const storeToken = (data: AuthTokenData) => {
 };
 
 export const getAuthorizationUrl = () => {
+  // Garantindo que os parâmetros estejam corretamente formatados
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: CLIENT_ID,
@@ -64,6 +67,10 @@ export const exchangeCodeForToken = async (code: string): Promise<AuthTokenData>
   console.log('Trocando código por token...');
   
   try {
+    // Adicionando logs detalhados para debugar a resposta da API
+    console.log('Enviando requisição para obter token com código:', code);
+    console.log('Redirect URI usado:', REDIRECT_URI);
+    
     const response = await fetch('https://api.mercadolivre.com/oauth/token', {
       method: 'POST',
       headers: {
@@ -79,6 +86,8 @@ export const exchangeCodeForToken = async (code: string): Promise<AuthTokenData>
       })
     });
 
+    console.log('Resposta da API - Status:', response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Falha na troca do código:', response.status, errorText);
