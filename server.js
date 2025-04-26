@@ -12,6 +12,14 @@ const PORT = process.env.PORT || 3000;
 app.use(compression());
 app.use(cors());
 
+// Status endpoint to check if server is running
+app.get('/api/status', (req, res) => {
+  res.json({ 
+    status: 'online', 
+    message: 'API do Mercado Livre Proxy está funcionando!' 
+  });
+});
+
 // API route for Mercado Livre search
 app.get('/api/search', async (req, res) => {
   const { query, limit = 20 } = req.query;
@@ -21,7 +29,7 @@ app.get('/api/search', async (req, res) => {
   }
 
   try {
-    console.log(`🔍 Buscando produtos para: "${query}"`);
+    console.log(`🔍 Backend recebeu requisição para buscar: "${query}" com limite ${limit}`);
     const response = await axios.get('https://api.mercadolibre.com/sites/MLB/search', {
       params: { q: query, limit }
     });
@@ -36,11 +44,11 @@ app.get('/api/search', async (req, res) => {
       seller: product.seller || { nickname: 'Vendedor' }
     }));
 
-    console.log(`✅ ${products.length} produtos encontrados`);
+    console.log(`✅ Backend encontrou ${products.length} produtos para "${query}"`);
     res.json(products);
   } catch (error) {
-    console.error('🚨 Erro ao buscar produtos:', error);
-    res.status(500).json({ error: 'Erro ao buscar produtos' });
+    console.error('🚨 Erro no backend ao buscar produtos:', error.message);
+    res.status(500).json({ error: `Erro ao buscar produtos: ${error.message}` });
   }
 });
 
@@ -53,5 +61,8 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`📡 Endpoints disponíveis:`);
+  console.log(`   - GET /api/status - Verificar status da API`);
+  console.log(`   - GET /api/search?query=TERMO - Buscar produtos`);
 });

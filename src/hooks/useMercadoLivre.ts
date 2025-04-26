@@ -19,3 +19,26 @@ export function useTrendingProducts(limit = 20) {
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
+
+export function useApiStatus() {
+  return useQuery({
+    queryKey: ['api', 'status'],
+    queryFn: async () => {
+      try {
+        const url = new URL('/api/status', window.location.origin);
+        const response = await fetch(url.toString());
+        
+        if (!response.ok) {
+          throw new Error(`Status da API: ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('🚨 Erro ao verificar status da API:', error);
+        throw error;
+      }
+    },
+    staleTime: 60 * 1000, // 1 minute
+    retry: 3,
+  });
+}

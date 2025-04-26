@@ -5,12 +5,12 @@ export async function searchProducts(query: string, limit = 20) {
       throw new Error('Termo de busca é obrigatório');
     }
     
-    console.log(`🔍 Buscando produtos para: "${query}"`);
-    
     // Use our backend API endpoint
     const url = new URL('/api/search', window.location.origin);
     url.searchParams.append('query', query);
     url.searchParams.append('limit', limit.toString());
+    
+    console.log(`🔍 Fazendo requisição para: "${url.toString()}"`);
     
     const response = await fetch(url.toString());
     
