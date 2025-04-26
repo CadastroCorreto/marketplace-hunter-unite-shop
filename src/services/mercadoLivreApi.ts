@@ -1,3 +1,4 @@
+
 import { getStoredToken } from './mercadoLivreAuth';
 
 export async function fetchFeaturedProducts() {
@@ -106,3 +107,4 @@ export async function fetchProductsByQuery(query: string, limit = 20) {
     return [];
   }
 }
+

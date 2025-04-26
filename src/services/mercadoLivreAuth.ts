@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 const CLIENT_ID = '652659079305130';
@@ -57,7 +56,7 @@ export const getAuthorizationUrl = () => {
   });
   
   const authUrl = `https://auth.mercadolivre.com.br/authorization?${params.toString()}`;
-  console.log('URL de autorização gerada:', authUrl);
+  console.log('🔗 URL de autorização gerada:', authUrl);
   return authUrl;
 };
 
