@@ -30,7 +30,7 @@ interface AuthResponse {
 
 const CLIENT_ID = '652659079305130';
 const CLIENT_SECRET = 'bcHDdHFAijKYPA7s3C73oHmr2U9tSIlP';
-const REDIRECT_URI = 'https://marketplace-hunter-unite-shop.lovable.app/callback/mercadolivre';
+const REDIRECT_URI = 'https://encontrae.onrender.com/callback/mercadolivre';
 
 const getStoredToken = (): { access_token: string; expires_at: number; refresh_token: string } | null => {
   const tokenData = localStorage.getItem('ml_token_data');
