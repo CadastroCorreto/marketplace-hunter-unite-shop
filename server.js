@@ -13,15 +13,16 @@ app.use(compression());
 app.use(cors());
 
 // Status endpoint to check if server is running
-app.get('/api/status', (req, res) => {
+app.get('/status', (req, res) => {
   res.json({ 
     status: 'online', 
-    message: 'API do Mercado Livre Proxy está funcionando!' 
+    message: 'Marketplace Hunter API está funcionando!',
+    timestamp: new Date().toISOString()
   });
 });
 
 // API route for Mercado Livre search
-app.get('/api/search', async (req, res) => {
+app.get('/search', async (req, res) => {
   const { query, limit = 20 } = req.query;
 
   if (!query || query.trim() === '') {
@@ -63,7 +64,7 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`📡 Endpoints disponíveis:`);
-  console.log(`   - GET /api/status - Verificar status da API`);
-  console.log(`   - GET /api/search?query=TERMO - Buscar produtos`);
+  console.log(`   - GET /status - Verificar status da API`);
+  console.log(`   - GET /search?query=TERMO - Buscar produtos`);
 });
 

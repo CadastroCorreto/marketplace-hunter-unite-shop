@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { searchProducts } from '@/services/mercadoLivreApi';
 
@@ -39,7 +38,7 @@ export function useApiStatus() {
     queryKey: ['api', 'status'],
     queryFn: async () => {
       try {
-        const url = new URL('/api/status', window.location.origin);
+        const url = new URL('/status', 'https://marketplace-hunter-unite-shop.onrender.com');
         const response = await fetch(url.toString());
         
         if (!response.ok) {
