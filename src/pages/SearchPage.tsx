@@ -4,6 +4,8 @@ import SearchForm from '@/components/search/SearchForm';
 import ProductCard from '@/components/search/ProductCard';
 import { useSearchProducts } from '@/hooks/useMercadoLivre';
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -25,9 +27,12 @@ const SearchPage = () => {
       </div>
 
       {error && (
-        <div className="text-center text-red-500 mb-8">
-          Erro ao buscar produtos. Tente novamente.
-        </div>
+        <Alert variant="destructive" className="mb-8">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erro ao buscar produtos. Tente novamente.
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
