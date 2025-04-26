@@ -66,3 +66,4 @@ app.listen(PORT, () => {
   console.log(`   - GET /api/status - Verificar status da API`);
   console.log(`   - GET /api/search?query=TERMO - Buscar produtos`);
 });
+
