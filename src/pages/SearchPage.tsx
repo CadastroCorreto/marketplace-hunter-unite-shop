@@ -12,10 +12,13 @@ const SearchPage = () => {
   const { data: products, isLoading, error } = useSearchProducts(searchQuery);
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      toast.success(`Buscando por "${query}"`);
+    if (!query || query.trim() === '') {
+      toast.error('Por favor, digite um termo de busca');
+      return;
     }
+    
+    setSearchQuery(query);
+    toast.success(`Buscando por "${query}"`);
   };
 
   return (

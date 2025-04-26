@@ -16,6 +16,10 @@ app.use(cors());
 app.get('/api/search', async (req, res) => {
   const { query, limit = 20 } = req.query;
 
+  if (!query || query.trim() === '') {
+    return res.status(400).json({ error: 'Query parameter is required' });
+  }
+
   try {
     console.log(`🔍 Buscando produtos para: "${query}"`);
     const response = await axios.get('https://api.mercadolibre.com/sites/MLB/search', {

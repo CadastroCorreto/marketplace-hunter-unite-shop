@@ -1,6 +1,10 @@
 
 export async function searchProducts(query: string, limit = 20) {
   try {
+    if (!query || query.trim() === '') {
+      throw new Error('Termo de busca é obrigatório');
+    }
+    
     console.log(`🔍 Buscando produtos para: "${query}"`);
     
     // Use our backend API endpoint
@@ -11,7 +15,8 @@ export async function searchProducts(query: string, limit = 20) {
     const response = await fetch(url.toString());
     
     if (!response.ok) {
-      throw new Error(`Erro na API: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Erro na API: ${response.status} - ${errorText}`);
     }
     
     const data = await response.json();
