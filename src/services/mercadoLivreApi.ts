@@ -1,11 +1,13 @@
 
+import { Product } from '@/hooks/useMercadoLivre';
+
 export async function searchProducts(query: string, limit = 20) {
   try {
     if (!query || query.trim() === '') {
       throw new Error('Termo de busca é obrigatório');
     }
     
-    const url = new URL('/api/search', window.location.origin);
+    const url = new URL('/search', 'https://marketplace-hunter-unite-shop.onrender.com');
     url.searchParams.append('query', query);
     url.searchParams.append('limit', limit.toString());
     
@@ -19,7 +21,7 @@ export async function searchProducts(query: string, limit = 20) {
     
     const data = await response.json();
     console.log(`✅ ${data.length} produtos encontrados:`, data);
-    return data;
+    return data as Product[];
   } catch (error) {
     console.error('🚨 Erro ao buscar produtos:', error);
     throw error;
