@@ -1,4 +1,3 @@
-
 export const generateDebugJson = () => {
   const storedToken = localStorage.getItem('ml_token_data');
   const parsedToken = storedToken ? JSON.parse(storedToken) : null;
