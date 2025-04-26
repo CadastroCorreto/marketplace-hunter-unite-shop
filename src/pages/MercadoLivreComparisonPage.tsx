@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Search } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import MercadoLivreProductTable from '@/components/marketplaces/MercadoLivreProductTable';
-import { fetchProductsByQuery } from '@/services/mercadoLivreApi';
+import { searchProducts } from '@/services/mercadoLivreApi';
 
 interface MercadoLivreProduct {
   id: string;
@@ -29,7 +29,6 @@ const MercadoLivreComparisonPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<MercadoLivreProduct[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const { toast } = useToast();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,21 +39,18 @@ const MercadoLivreComparisonPage = () => {
     setHasSearched(true);
     
     try {
-      const data = await fetchProductsByQuery(searchQuery);
+      const data = await searchProducts(searchQuery);
       setProducts(data);
       
       console.log('Produtos encontrados:', data.length);
       
-      toast({
-        title: `${data.length} produtos encontrados`,
-        description: `Resultados para "${searchQuery}" ordenados por menor preço`,
+      toast.success(`${data.length} produtos encontrados`, {
+        description: `Resultados para "${searchQuery}" obtidos com sucesso`,
       });
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
-      toast({
-        title: "Erro ao buscar produtos",
+      toast.error("Erro ao buscar produtos", {
         description: error instanceof Error ? error.message : "Não foi possível buscar os produtos",
-        variant: "destructive"
       });
       setProducts([]);
     } finally {
@@ -71,7 +67,7 @@ const MercadoLivreComparisonPage = () => {
           <CardHeader>
             <CardTitle>Buscar Produtos</CardTitle>
             <CardDescription>
-              Digite o nome do produto para comparar preços no Mercado Livre
+              Digite o nome do produto para buscar no Mercado Livre
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -107,7 +103,7 @@ const MercadoLivreComparisonPage = () => {
               </CardTitle>
               {products.length > 0 && (
                 <CardDescription>
-                  Encontramos {products.length} produtos ordenados por menor preço
+                  Encontramos {products.length} produtos no Mercado Livre
                 </CardDescription>
               )}
             </CardHeader>

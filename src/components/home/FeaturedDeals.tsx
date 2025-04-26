@@ -1,29 +1,28 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import ProductCard from '../search/ProductCard';
-import { useMercadoLivre } from '@/hooks/useMercadoLivre';
-import { useToast } from "@/hooks/use-toast";
+import { useTrendingProducts } from '@/hooks/useMercadoLivre';
+import { toast } from "sonner";
 import { MOCK_DEALS } from '@/constants/mockDeals';
 import { formatMercadoLivreProduct } from '@/utils/productFormatters';
 import { LoadingState, ErrorState, EmptyState } from './FeaturedDealsStates';
 
 const FeaturedDeals = () => {
-  const { data: mlProducts, isLoading, error, refetch } = useMercadoLivre();
-  const { toast } = useToast();
+  const { data: trendingProducts, isLoading, error, refetch } = useTrendingProducts(3);
   
-  useEffect(() => {
+  // Usar produtos da API ou mockados quando necessário
+  const deals = trendingProducts?.length 
+    ? trendingProducts.map(formatMercadoLivreProduct)
+    : MOCK_DEALS;
+
+  // Notificar erros via toast
+  React.useEffect(() => {
     if (error) {
-      toast({
-        title: "Erro ao carregar produtos",
-        description: `Detalhes: ${error.message || "Erro desconhecido"}`,
-        variant: "destructive"
+      toast.error("Erro ao carregar produtos", {
+        description: `Não foi possível obter produtos em tendência. ${error.message}`
       });
     }
-  }, [error, toast]);
-
-  const deals = mlProducts?.length 
-    ? mlProducts.slice(0, 3).map(formatMercadoLivreProduct)
-    : MOCK_DEALS;
+  }, [error]);
 
   return (
     <section className="py-16 px-4 bg-white">
@@ -31,16 +30,15 @@ const FeaturedDeals = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Ofertas em Destaque</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Confira as melhores ofertas selecionadas dos principais marketplaces.
+            Confira as melhores ofertas e tendências do Mercado Livre.
           </p>
-          {!isLoading && (
-            <button 
-              onClick={() => refetch()} 
-              className="mt-4 px-4 py-2 bg-marketplace-blue text-white rounded-md hover:bg-blue-600"
-            >
-              Atualizar Ofertas
-            </button>
-          )}
+          <button 
+            onClick={() => refetch()} 
+            className="mt-4 px-4 py-2 bg-marketplace-blue text-white rounded-md hover:bg-blue-600"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Atualizando...' : 'Atualizar Ofertas'}
+          </button>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -53,7 +51,7 @@ const FeaturedDeals = () => {
                 <ProductCard key={deal.id} {...deal} />
               ))}
             </>
-          ) : mlProducts?.length ? (
+          ) : deals.length ? (
             deals.map((deal) => (
               <ProductCard key={deal.id} {...deal} />
             ))
