@@ -14,23 +14,29 @@ export interface AuthTokenData {
 
 export const getStoredToken = (): AuthTokenData | null => {
   const tokenData = localStorage.getItem('ml_token_data');
+  console.log('📦 Recuperando token armazenado:', !!tokenData);
+  
   if (!tokenData) return null;
   
   try {
     const parsed: AuthTokenData = JSON.parse(tokenData);
+    console.log('🕰️ Token expiração:', new Date(parsed.expires_at).toLocaleString());
+    
     if (parsed.expires_at && parsed.expires_at < Date.now()) {
-      console.log('Token expirado, precisa renovar');
+      console.warn('🚨 Token expirado, precisa renovar');
       return null;
     }
-    console.log('Token válido encontrado no localStorage');
+    
     return parsed;
   } catch (error) {
-    console.error('Erro ao recuperar token armazenado:', error);
+    console.error('❌ Erro ao recuperar token armazenado:', error);
     return null;
   }
 };
 
 export const storeToken = (data: AuthTokenData) => {
+  console.log('💾 Armazenando novo token...');
+  
   const tokenData = {
     access_token: data.access_token,
     refresh_token: data.refresh_token,
@@ -38,7 +44,7 @@ export const storeToken = (data: AuthTokenData) => {
     user_id: data.user_id
   };
   
-  console.log('Armazenando novo token, válido até:', new Date(tokenData.expires_at).toLocaleString());
+  console.log('⏰ Token válido até:', new Date(tokenData.expires_at).toLocaleString());
   localStorage.setItem('ml_token_data', JSON.stringify(tokenData));
   return tokenData;
 };

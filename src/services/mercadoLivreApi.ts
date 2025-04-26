@@ -1,13 +1,14 @@
-
 import { getStoredToken } from './mercadoLivreAuth';
 
 export async function fetchFeaturedProducts() {
   try {
-    console.log('Iniciando busca de produtos em destaque...');
+    console.log('🌟 Iniciando busca de produtos em destaque...');
     const storedToken = getStoredToken();
     
+    console.log('🔑 Token disponível:', !!storedToken);
+    
     if (!storedToken) {
-      console.log('Sem token disponível');
+      console.warn('❌ Nenhum token encontrado. Precisa autenticar.');
       return [];
     }
 
@@ -21,17 +22,17 @@ export async function fetchFeaturedProducts() {
       }
     );
     
-    console.log('Resposta da API:', response.status, response.statusText);
+    console.log('🌐 Resposta da API:', response.status, response.statusText);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erro na resposta da API:', response.status, errorText);
+      console.error('❌ Erro na resposta da API:', response.status, errorText);
       return [];
     }
     
     const trends = await response.json();
     
-    console.log('Tendências recebidas:', trends.length);
+    console.log('📊 Tendências recebidas:', trends.length);
     
     if (!trends || !trends.length) {
       console.log('Nenhuma tendência encontrada, retornando array vazio');
@@ -69,7 +70,7 @@ export async function fetchFeaturedProducts() {
     console.log('Produtos obtidos com sucesso:', validProducts.length);
     return validProducts;
   } catch (error) {
-    console.error('Erro no fluxo completo de busca de produtos:', error);
+    console.error('🚨 Erro no fluxo de busca de produtos:', error);
     return [];
   }
 }

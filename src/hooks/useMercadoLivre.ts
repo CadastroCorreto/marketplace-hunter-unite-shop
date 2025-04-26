@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from 'react';
@@ -102,13 +101,13 @@ export const useIsMercadoLivreConnected = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   
   useEffect(() => {
-    const storedToken = getStoredToken();
-    setIsConnected(!!storedToken);
-    
     const checkToken = () => {
-      const currentToken = getStoredToken();
-      setIsConnected(!!currentToken);
+      const storedToken = getStoredToken();
+      console.log('🔒 Verificando conexão do Mercado Livre:', !!storedToken);
+      setIsConnected(!!storedToken);
     };
+    
+    checkToken(); // Verificação inicial
     
     const interval = setInterval(checkToken, 5 * 60 * 1000);
     window.addEventListener('focus', checkToken);
