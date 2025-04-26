@@ -7,27 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 import MercadoLivreProductTable from '@/components/marketplaces/MercadoLivreProductTable';
+import { Product } from '@/hooks/useMercadoLivre';
 import { searchProducts } from '@/services/mercadoLivreApi';
-
-interface MercadoLivreProduct {
-  id: string;
-  title: string;
-  price: number;
-  permalink: string;
-  seller: {
-    id: string;
-    nickname: string;
-  };
-  shipping: {
-    free_shipping: boolean;
-  };
-  thumbnail: string;
-}
 
 const MercadoLivreComparisonPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [products, setProducts] = useState<MercadoLivreProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -42,13 +28,13 @@ const MercadoLivreComparisonPage = () => {
       const data = await searchProducts(searchQuery);
       setProducts(data);
       
-      console.log('Produtos encontrados:', data.length);
+      console.log('✅ Produtos encontrados:', data.length);
       
       toast.success(`${data.length} produtos encontrados`, {
         description: `Resultados para "${searchQuery}" obtidos com sucesso`,
       });
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
+      console.error('🚨 Erro ao buscar produtos:', error);
       toast.error("Erro ao buscar produtos", {
         description: error instanceof Error ? error.message : "Não foi possível buscar os produtos",
       });
@@ -108,7 +94,44 @@ const MercadoLivreComparisonPage = () => {
               )}
             </CardHeader>
             <CardContent>
-              <MercadoLivreProductTable products={products} isLoading={isLoading} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product) => (
+                  <Card key={product.id} className="flex flex-col overflow-hidden">
+                    <div className="relative pt-[100%]">
+                      <img 
+                        src={product.thumbnail} 
+                        alt={product.title}
+                        className="absolute inset-0 w-full h-full object-contain p-4"
+                      />
+                    </div>
+                    <CardContent className="flex-1 p-4">
+                      <h3 className="font-medium text-lg mb-2 line-clamp-2">
+                        {product.title}
+                      </h3>
+                      <div className="mt-2 flex justify-between items-center">
+                        <p className="text-xl font-bold">
+                          R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </p>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="ml-2"
+                        >
+                          <a href={product.permalink} target="_blank" rel="noopener noreferrer">
+                            Ver Oferta
+                          </a>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {products.length === 0 && !isLoading && (
+                <div className="text-center py-10">
+                  <p className="text-gray-500">Nenhum produto encontrado para "{searchQuery}"</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

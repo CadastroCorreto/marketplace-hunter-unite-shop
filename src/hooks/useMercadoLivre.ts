@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { searchProducts } from '@/services/mercadoLivreApi';
 
@@ -11,6 +12,7 @@ export interface Product {
     free_shipping: boolean;
   };
   seller: {
+    id: string;
     nickname: string;
   };
 }
@@ -55,3 +57,4 @@ export function useApiStatus() {
     retry: 3,
   });
 }
+
