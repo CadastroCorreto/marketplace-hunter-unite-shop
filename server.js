@@ -8,9 +8,13 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS Configuration - Allow requests only from Lovable domain
+// CORS Configuration - Allow requests from Lovable domain and localhost for development
 app.use(cors({
-  origin: 'https://marketplace-hunter-unite-shop.lovable.app', // Specific Lovable domain
+  origin: [
+    'https://marketplace-hunter-unite-shop.lovable.app', 
+    'http://localhost:8080', 
+    'http://localhost:3000'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
