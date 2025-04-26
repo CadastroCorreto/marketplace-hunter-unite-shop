@@ -8,9 +8,15 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable compression and CORS
+// CORS Configuration - Allow requests from any origin
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Enable compression
 app.use(compression());
-app.use(cors());
 
 // Status endpoint to check if server is running
 app.get('/status', (req, res) => {
@@ -46,6 +52,9 @@ app.get('/search', async (req, res) => {
     }));
 
     console.log(`✅ Backend encontrou ${products.length} produtos para "${query}"`);
+    
+    // Add CORS headers explicitly
+    res.header('Access-Control-Allow-Origin', '*');
     res.json(products);
   } catch (error) {
     console.error('🚨 Erro no backend ao buscar produtos:', error.message);
@@ -67,4 +76,3 @@ app.listen(PORT, () => {
   console.log(`   - GET /status - Verificar status da API`);
   console.log(`   - GET /search?query=TERMO - Buscar produtos`);
 });
-
